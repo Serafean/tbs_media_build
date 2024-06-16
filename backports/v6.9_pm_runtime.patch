@@ -1,0 +1,11 @@
+--- a/drivers/media/i2c/ccs/ccs-core.c 17:28:59.746466284 +0200
++++ b/drivers/media/i2c/ccs/ccs-core.c 17:28:49.163242565 +0200
+@@ -665,7 +665,7 @@
+ 		break;
+ 	}
+ 
+-	pm_status = pm_runtime_get_if_active(&client->dev, true);
++	pm_status = pm_runtime_get_if_active(&client->dev);
+ 	if (!pm_status)
+ 		return 0;
+ 
