@@ -1,0 +1,120 @@
+--- a/include/media/v4l2-common.h	2024-06-13 17:37:23.261251223 +0200
++++ b/include/media/v4l2-common.h	2024-06-13 17:38:25.777270391 +0200
+@@ -278,13 +278,13 @@
+  *
+  *
+  * @v4l2_dev: pointer to &struct v4l2_device.
+- * @master: pointer to struct spi_master.
++ * @master: pointer to struct spi_controller.
+  * @info: pointer to struct spi_board_info.
+  *
+  * returns a &struct v4l2_subdev pointer.
+  */
+ struct v4l2_subdev *v4l2_spi_new_subdev(struct v4l2_device *v4l2_dev,
+-		struct spi_master *master, struct spi_board_info *info);
++		struct spi_controller *master, struct spi_board_info *info);
+ 
+ /**
+  * v4l2_spi_subdev_init - Initialize a v4l2_subdev with data from an
+@@ -308,7 +308,7 @@
+ 
+ static inline struct v4l2_subdev *
+ v4l2_spi_new_subdev(struct v4l2_device *v4l2_dev,
+-		    struct spi_master *master, struct spi_board_info *info)
++		    struct spi_controller *master, struct spi_board_info *info)
+ {
+ 	return NULL;
+ }
+--- a/drivers/media/pci/saa716x/saa716x_spi.c	2024-06-13 17:41:00.798998117 +0200
++++ b/drivers/media/pci/saa716x/saa716x_spi.c	2024-06-13 17:39:37.233196967 +0200
+@@ -198,8 +198,8 @@
+ 
+ static int saa716x_spi_setup(struct spi_device *spi)
+ {
+-	struct spi_master *master		= spi->master;
+-	struct saa716x_spi_state *saa716x_spi	= spi_master_get_devdata(master);
++	struct spi_controller *master		= spi->master;
++	struct saa716x_spi_state *saa716x_spi	= spi_controller_get_devdata(master);
+ 	struct saa716x_dev *saa716x		= saa716x_spi->saa716x;
+ 	struct saa716x_spi_config *config	= &saa716x->spi_config;
+ 
+@@ -237,8 +237,8 @@
+ 
+ static int saa716x_spi_transfer(struct spi_device *spi, struct spi_message *msg)
+ {
+-	struct spi_master *master		= spi->master;
+-	struct saa716x_spi_state *saa716x_spi	= spi_master_get_devdata(master);
++	struct spi_controller *master		= spi->master;
++	struct saa716x_spi_state *saa716x_spi	= spi_controller_get_devdata(master);
+ 	struct saa716x_dev *saa716x		= saa716x_spi->saa716x;
+ 	unsigned long flags;
+ 
+@@ -266,7 +266,7 @@
+ int saa716x_spi_init(struct saa716x_dev *saa716x)
+ {
+ 	struct pci_dev *pdev = saa716x->pdev;
+-	struct spi_master *master;
++	struct spi_controller *master;
+ 	struct saa716x_spi_state *saa716x_spi;
+ 	int ret;
+ 
+@@ -279,7 +279,7 @@
+ 		return -ENOMEM;
+ 	}
+ 
+-	saa716x_spi		= spi_master_get_devdata(master);
++	saa716x_spi		= spi_controller_get_devdata(master);
+ 	saa716x_spi->master	= master;
+ 	saa716x_spi->saa716x	= saa716x;
+ 	saa716x->saa716x_spi	= saa716x_spi;
+@@ -296,7 +296,7 @@
+ 		goto err;
+ 	}
+ err:
+-	spi_master_put(master);
++	spi_controller_put(master);
+ 	return ret;
+ }
+ EXPORT_SYMBOL(saa716x_spi_init);
+--- a/drivers/media/pci/netup_unidvb/netup_unidvb_spi.c	2024-06-13 17:42:24.444798437 +0200
++++ b/drivers/media/pci/netup_unidvb/netup_unidvb_spi.c	2024-06-13 17:41:45.888531111 +0200
+@@ -35,7 +35,7 @@
+ 
+ struct netup_spi {
+ 	struct device			*dev;
+-	struct spi_master		*master;
++	struct spi_controller		*master;
+ 	struct netup_spi_regs __iomem	*regs;
+ 	u8 __iomem			*mmio;
+ 	spinlock_t			lock;
+@@ -93,10 +93,10 @@
+ 	return IRQ_HANDLED;
+ }
+ 
+-static int netup_spi_transfer(struct spi_master *master,
++static int netup_spi_transfer(struct spi_controller *master,
+ 			      struct spi_message *msg)
+ {
+-	struct netup_spi *spi = spi_master_get_devdata(master);
++	struct netup_spi *spi = spi_controller_get_devdata(master);
+ 	struct spi_transfer *t;
+ 	int result = 0;
+ 	u32 tr_size;
+@@ -172,7 +172,7 @@
+ 
+ int netup_spi_init(struct netup_unidvb_dev *ndev)
+ {
+-	struct spi_master *master;
++	struct spi_controller *master;
+ 	struct netup_spi *nspi;
+ 
+ 	master = devm_spi_alloc_master(&ndev->pci_dev->dev,
+@@ -182,7 +182,7 @@
+ 			"%s(): unable to alloc SPI master\n", __func__);
+ 		return -EINVAL;
+ 	}
+-	nspi = spi_master_get_devdata(master);
++	nspi = spi_controller_get_devdata(master);
+ 	master->mode_bits = SPI_CPOL | SPI_CPHA | SPI_LSB_FIRST;
+ 	master->bus_num = -1;
+ 	master->num_chipselect = 1;

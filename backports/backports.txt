@@ -30,6 +30,7 @@ add rc-cec.patch
 
 [6.9.1023]
 add v6.9_pm_runtime.patch
+add v6.9_spi_controller.patch
 
 [6.5.1023]
 add v6.5_pcm_copy.patch
